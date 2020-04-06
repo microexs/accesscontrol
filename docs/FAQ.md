@@ -12,7 +12,7 @@ AccessControl.js ...
 
 ### What is an "action"?
 
-AccessControl.js defines "accessing" by [CRUD][crud] actions (`create`, `read`, `update`, `delete`). It does not specify **how an _action_ is performed** on the _resource_.  But rather, decides **whether the _action_ can be performed** by the accessing party: **_role_**.
+AccessControl.js defines "accessing" by [CRUD][crud] actions (`create`, `read`, `update`, `delete`). It does not specify **how an _action_ is performed** on the _resource_.  But rather, decides **whether the _action_ can be performed** by the accessing party: **_subject_**.
 
 Below is a typical match of AC actions to actual HTTP and database operations:
 
@@ -85,7 +85,7 @@ And we'll restrict access for `create` actions performed on this resource.
 
 In this case, we have 4 options.  
 
-By **creating** a **`fu-relation`** resource, **a user of this role**, can assign...
+By **creating** a **`fu-relation`** resource, **a user of this subject**, can assign...
 
 | # | Permission                                     | covers |
 | - | -----------------------------------------------| -------|
@@ -104,7 +104,7 @@ With this **decision**:
 - I don't need to check whether the assigned-user is current (_own_) user. 
 - I need to check whether the assigned-folder is _own_ `folder` (implied resource) of the current user.
 
-First I'll define 2 roles; `user` and `admin`; and grant access permissions accordingly:
+First I'll define 2 subjects; `user` and `admin`; and grant access permissions accordingly:
 ```js
 ac.grant('user').createOwn('fu-relation')
   .grant('admin').createAny('fu-relation');
@@ -113,14 +113,14 @@ So when the resource is accessed, I'll check these permissions, and restrict or 
 ```js
 // psuedo (sync) code
 
-var role = session.role; // role of the requesting user: 'user' or 'admin'
+var subject = session.subject; // subject of the requesting user: 'user' or 'admin'
 var userIdToBeAssigned = request.params.userId; // can be any user id
 var folderId = request.params.folderId;
 
-// First check if current role can create "ANY" fu-relation. (ANY > OWN)
-var permission = ac.can(role).createAny('fu-relation');
+// First check if current subject can create "ANY" fu-relation. (ANY > OWN)
+var permission = ac.can(subject).createAny('fu-relation');
 
-// if not granted, check if current role can create "OWN" fu-relation:
+// if not granted, check if current subject can create "OWN" fu-relation:
 if (permission.granted === false) {
     // Determine whether the implied resource (folder) is "owned" 
     // by the current user. This is app's responsibility, not AC's.
@@ -128,7 +128,7 @@ if (permission.granted === false) {
         // We made sure that the implied resource is "owned" by this user.
         // Now we can ask AccessControl permission for performing 
         // the action on the target resource:
-        permission = ac.can(role).createOwn('fu-relation');
+        permission = ac.can(subject).createOwn('fu-relation');
     }
 }
 
@@ -150,7 +150,7 @@ if (permission.granted) {
 
 ### What to do when AccessControl.js throws an error?
 
-Granting permissions for valuable resources and managing access levels for user roles... This is a highly sensitive context; in which mostly, any failure or exception becomes critical. So in any case, an `AccessControlError` is thrown right away. **No silent errors**!
+Granting permissions for valuable resources and managing access levels for user subjects... This is a highly sensitive context; in which mostly, any failure or exception becomes critical. So in any case, an `AccessControlError` is thrown right away. **No silent errors**!
 
 **In Development:**
 Hard-test your application with all or most possible use cases, in terms of access management and control. If you see any `AccessControlError` thrown you should definitely fix it immediately. Because this typically indicates that your grants model either has a logical or technical flaw.

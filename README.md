@@ -21,9 +21,9 @@
 <br />
 
 
-### Role and Attribute based Access Control for Node.js  
+### Subject and Attribute based Access Control for Node.js  
 
-Many [RBAC][rbac] (Role-Based Access Control) implementations differ, but the basics is widely adopted since it simulates real life role (job) assignments. But while data is getting more and more complex; you need to define policies on resources, subjects or even environments. This is called [ABAC][abac] (Attribute-Based Access Control).
+Many [RBAC][rbac] (Subject-Based Access Control) implementations differ, but the basics is widely adopted since it simulates real life subject (job) assignments. But while data is getting more and more complex; you need to define policies on resources, subjects or even environments. This is called [ABAC][abac] (Attribute-Based Access Control).
 
 With the idea of merging the best features of the two (see this [NIST paper][nist-paper]); this library implements RBAC basics and also focuses on *resource* and *action* attributes.
 
@@ -32,7 +32,7 @@ With the idea of merging the best features of the two (see this [NIST paper][nis
     <tr>
       <th><a href="#installation">Install</a></th>
       <th><a href="#guide">Examples</a></th>
-      <th><a href="#roles">Roles</a></th>
+      <th><a href="#subjects">Subjects</a></th>
       <th><a href="#actions-and-action-attributes">Actions</a></th>
       <th><a href="#resources-and-resource-attributes">Resources</a></th>
       <th><a href="#checking-permissions-and-filtering-attributes">Permissions</a></th>
@@ -46,8 +46,8 @@ With the idea of merging the best features of the two (see this [NIST paper][nis
 ## Core Features
 
 - Chainable, friendly API.  
-e.g. `ac.can(role).create(resource)`
-- Role hierarchical **inheritance**.
+e.g. `ac.can(subject).create(resource)`
+- Subject hierarchical **inheritance**.
 - Define grants **at once** (e.g. from database result) or **one by one**.
 - Grant/deny permissions by attributes defined by **glob notation** (with nested object support).
 - Ability to **filter** data (model) instance by allowed attributes.
@@ -75,15 +75,15 @@ const AccessControl = require('accesscontrol');
 
 ### Basic Example
 
-Define roles and grants one by one.
+Define subjects and grants one by one.
 ```js
 const ac = new AccessControl();
-ac.grant('user')                    // define new or modify existing role. also takes an array.
+ac.grant('user')                    // define new or modify existing subject. also takes an array.
     .createOwn('video')             // equivalent to .createOwn('video', ['*'])
     .deleteOwn('video')
     .readAny('video')
-  .grant('admin')                   // switch to another role without breaking the chain
-    .extend('user')                 // inherit role capabilities. also takes an array
+  .grant('admin')                   // switch to another subject without breaking the chain
+    .extend('user')                 // inherit subject capabilities. also takes an array
     .updateAny('video', ['title'])  // explicitly defined attributes
     .deleteAny('video');
 
@@ -98,13 +98,13 @@ console.log(permission.attributes); // —> ['title']
 
 ### Express.js Example
 
-Check role permissions for the requested resource and action, if granted; respond with filtered attributes.
+Check subject permissions for the requested resource and action, if granted; respond with filtered attributes.
 
 ```js
 const ac = new AccessControl(grants);
 // ...
 router.get('/videos/:title', function (req, res, next) {
-    const permission = ac.can(req.user.role).readAny('video');
+    const permission = ac.can(req.user.subject).readAny('video');
     if (permission.granted) {
         Video.find(req.params.title, function (err, data) {
             if (err || !data) return res.status(404).end();
@@ -112,32 +112,32 @@ router.get('/videos/:title', function (req, res, next) {
             res.json(permission.filter(data));
         });
     } else {
-        // resource is forbidden for this user/role
+        // resource is forbidden for this user/subject
         res.status(403).end();
     }
 });
 ```
 
-## Roles
+## Subjects
 
-You can create/define roles simply by calling `.grant(<role>)` or `.deny(<role>)` methods on an `AccessControl` instance.  
+You can create/define subjects simply by calling `.grant(<subject>)` or `.deny(<subject>)` methods on an `AccessControl` instance.  
 
-- Roles can extend other roles.
+- Subjects can extend other subjects.
 
 ```js
-// user role inherits viewer role permissions
+// user subject inherits viewer subject permissions
 ac.grant('user').extend('viewer');
-// admin role inherits both user and editor role permissions
+// admin subject inherits both user and editor subject permissions
 ac.grant('admin').extend(['user', 'editor']);
-// both admin and superadmin roles inherit moderator permissions
+// both admin and superadmin subjects inherit moderator permissions
 ac.grant(['admin', 'superadmin']).extend('moderator');
 ```
 
-- Inheritance is done by reference, so you can grant resource permissions before or after extending a role. 
+- Inheritance is done by reference, so you can grant resource permissions before or after extending a subject. 
 
 ```js
 // case #1
-ac.grant('admin').extend('user') // assuming user role already exists
+ac.grant('admin').extend('user') // assuming user subject already exists
   .grant('user').createOwn('video');
 
 // case #2
@@ -150,16 +150,16 @@ console.log(permission.granted); // true
 ```
 
 Notes on inheritance:  
-- A role cannot extend itself.
+- A subject cannot extend itself.
 - Cross-inheritance is not allowed.  
 e.g. `ac.grant('user').extend('admin').grant('admin').extend('user')` will throw.
-- A role cannot (pre)extend a non-existing role. In other words, you should first create the base role.  e.g. `ac.grant('baseRole').grant('role').extend('baseRole')`
+- A subject cannot (pre)extend a non-existing subject. In other words, you should first create the base subject.  e.g. `ac.grant('baseRole').grant('subject').extend('baseRole')`
 
 ## Actions and Action-Attributes
 
 [CRUD][crud] operations are the actions you can perform on a resource. There are two action-attributes which define the **possession** of the resource: *own* and *any*.
 
-For example, an `admin` role can `create`, `read`, `update` or `delete` (CRUD) **any** `account` resource. But a `user` role might only `read` or `update` its **own** `account` resource.
+For example, an `admin` subject can `create`, `read`, `update` or `delete` (CRUD) **any** `account` resource. But a `user` subject might only `read` or `update` its **own** `account` resource.
 
 <table>
     <thead>
@@ -187,26 +187,26 @@ For example, an `admin` role can `create`, `read`, `update` or `delete` (CRUD) *
 </table>
 
 ```js
-ac.grant('role').readOwn('resource');
-ac.deny('role').deleteAny('resource');
+ac.grant('subject').readOwn('resource');
+ac.deny('subject').deleteAny('resource');
 ```
 
 _Note that **own** requires you to also check for the actual possession. See [this](https://github.com/onury/accesscontrol/issues/14#issuecomment-328316670) for more._
 
 ## Resources and Resource-Attributes
 
-Multiple roles can have access to a specific resource. But depending on the context, you may need to limit the contents of the resource for specific roles.  
+Multiple subjects can have access to a specific resource. But depending on the context, you may need to limit the contents of the resource for specific subjects.  
 
 This is possible by resource attributes. You can use Glob notation to define allowed or denied attributes.
 
 For example, we have a `video` resource that has the following attributes: `id`, `title` and `runtime`.
-All attributes of *any* `video` resource can be read by an `admin` role:
+All attributes of *any* `video` resource can be read by an `admin` subject:
 ```js
 ac.grant('admin').readAny('video', ['*']);
 // equivalent to:
 // ac.grant('admin').readAny('video');
 ```
-But the `id` attribute should not be read by a `user` role.  
+But the `id` attribute should not be read by a `user` subject.  
 ```js
 ac.grant('user').readOwn('video', ['*', '!id']);
 // equivalent to:
@@ -220,7 +220,7 @@ ac.grant('user').readOwn('account', ['*', '!record.id']);
 
 ## Checking Permissions and Filtering Attributes
 
-You can call `.can(<role>).<action>(<resource>)` on an `AccessControl` instance to check for granted permissions for a specific resource and action.
+You can call `.can(<subject>).<action>(<resource>)` on an `AccessControl` instance to check for granted permissions for a specific resource and action.
 
 ```js
 const permission = ac.can('user').readOwn('account');
@@ -261,15 +261,15 @@ const ac = new AccessControl(grantsObject);
 ```js
 // grant list fetched from DB (to be converted to a valid grants object, internally)
 let grantList = [
-    { role: 'admin', resource: 'video', action: 'create:any', attributes: '*, !views' },
-    { role: 'admin', resource: 'video', action: 'read:any', attributes: '*' },
-    { role: 'admin', resource: 'video', action: 'update:any', attributes: '*, !views' },
-    { role: 'admin', resource: 'video', action: 'delete:any', attributes: '*' },
+    { subject: 'admin', resource: 'video', action: 'create:any', attributes: '*, !views' },
+    { subject: 'admin', resource: 'video', action: 'read:any', attributes: '*' },
+    { subject: 'admin', resource: 'video', action: 'update:any', attributes: '*, !views' },
+    { subject: 'admin', resource: 'video', action: 'delete:any', attributes: '*' },
 
-    { role: 'user', resource: 'video', action: 'create:own', attributes: '*, !rating, !views' },
-    { role: 'user', resource: 'video', action: 'read:any', attributes: '*' },
-    { role: 'user', resource: 'video', action: 'update:own', attributes: '*, !rating, !views' },
-    { role: 'user', resource: 'video', action: 'delete:own', attributes: '*' }
+    { subject: 'user', resource: 'video', action: 'create:own', attributes: '*, !rating, !views' },
+    { subject: 'user', resource: 'video', action: 'read:any', attributes: '*' },
+    { subject: 'user', resource: 'video', action: 'update:own', attributes: '*, !rating, !views' },
+    { subject: 'user', resource: 'video', action: 'delete:own', attributes: '*' }
 ];
 const ac = new AccessControl(grantList);
 ```
@@ -322,7 +322,7 @@ Travis build should pass, coverage should not degrade.
 
 [docs]:http://onury.io/accesscontrol/?api=ac
 [faq]:http://onury.io/accesscontrol/?content=faq
-[rbac]:https://en.wikipedia.org/wiki/Role-based_access_control
+[rbac]:https://en.wikipedia.org/wiki/Subject-based_access_control
 [abac]:https://en.wikipedia.org/wiki/Attribute-Based_Access_Control
 [crud]:https://en.wikipedia.org/wiki/Create,_read,_update_and_delete
 [nist-paper]:http://csrc.nist.gov/groups/SNS/rbac/documents/kuhn-coyne-weil-10.pdf

@@ -1,7 +1,7 @@
 import { IQueryInfo } from '../core';
 /**
  *  Represents the inner `Permission` class that defines the granted or denied
- *  access permissions for the target resource and role.
+ *  access permissions for the target resource and subject.
  *
  *  You can check for a permission in two ways:
  *
@@ -19,7 +19,7 @@ import { IQueryInfo } from '../core';
  *  Or you can call {@link ?api=ac#AccessControl#permission|`AccessControl#permission`}
  *  by passing a fulfilled {@link ?api=ac#AccessControl#IQueryInfo|`IQueryInfo` object}.
  *  <p><pre><code> var permission = ac.permission({
- *      role: 'user',
+ *      subject: 'user',
  *      resource: 'video',
  *      action: 'create',
  *      possession: 'any'
@@ -46,21 +46,21 @@ declare class Permission {
      */
     constructor(grants: any, query: IQueryInfo);
     /**
-     *  Specifies the roles for which the permission is queried for.
-     *  Even if the permission is queried for a single role, this will still
+     *  Specifies the subjects for which the permission is queried for.
+     *  Even if the permission is queried for a single subject, this will still
      *  return an array.
      *
-     *  If the returned array has multiple roles, this does not necessarily mean
-     *  that the queried permission is granted or denied for each and all roles.
-     *  Note that when a permission is queried for multiple roles, attributes
-     *  are unioned (merged) for all given roles. This means "at least one of
-     *  these roles" have the permission for this action and resource attribute.
+     *  If the returned array has multiple subjects, this does not necessarily mean
+     *  that the queried permission is granted or denied for each and all subjects.
+     *  Note that when a permission is queried for multiple subjects, attributes
+     *  are unioned (merged) for all given subjects. This means "at least one of
+     *  these subjects" have the permission for this action and resource attribute.
      *
-     *  @name AccessControl~Permission#roles
+     *  @name AccessControl~Permission#subjects
      *  @type {Array<String>}
      *  @readonly
      */
-    readonly roles: string[];
+    readonly subjects: string[];
     /**
      *  Specifies the target resource for which the permission is queried for.
      *
@@ -73,9 +73,9 @@ declare class Permission {
      *  Gets an array of allowed attributes which are defined via
      *  Glob notation. If access is not granted, this will be an empty array.
      *
-     *  Note that when a permission is queried for multiple roles, attributes
-     *  are unioned (merged) for all given roles. This means "at least one of
-     *  these roles" have the permission for this action and resource attribute.
+     *  Note that when a permission is queried for multiple subjects, attributes
+     *  are unioned (merged) for all given subjects. This means "at least one of
+     *  these subjects" have the permission for this action and resource attribute.
      *
      *  @name AccessControl~Permission#attributes
      *  @type {Array<String>}

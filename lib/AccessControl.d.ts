@@ -1,7 +1,7 @@
 import { Access, IAccessInfo, Query, IQueryInfo, Permission } from './core';
 /**
  *  @classdesc
- *  AccessControl class that implements RBAC (Role-Based Access Control) basics
+ *  AccessControl class that implements RBAC (Subject-Based Access Control) basics
  *  and ABAC (Attribute-Based Access Control) <i>resource</i> and <i>action</i>
  *  attributes.
  *
@@ -10,7 +10,7 @@ import { Access, IAccessInfo, Query, IQueryInfo, Permission } from './core';
  *  willing to build it programmatically.
  *
  *  <p><pre><code> const grants = {
- *      role1: {
+ *      subject1: {
  *          resource1: {
  *              "create:any": [ attrs ],
  *              "read:own": [ attrs ]
@@ -20,7 +20,7 @@ import { Access, IAccessInfo, Query, IQueryInfo, Permission } from './core';
  *              "update:own": [ attrs ]
  *          }
  *      },
- *      role2: { ... }
+ *      subject2: { ... }
  *  };
  *  const ac = new AccessControl(grants);</code></pre></p>
  *
@@ -28,20 +28,20 @@ import { Access, IAccessInfo, Query, IQueryInfo, Permission } from './core';
  *  fetched from a database.
  *
  *  <p><pre><code> const flatList = [
- *      { role: 'role1', resource: 'resource1', action: 'create:any', attributes: [ attrs ] },
- *      { role: 'role1', resource: 'resource1', action: 'read:own', attributes: [ attrs ] },
- *      { role: 'role2', ... },
+ *      { subject: 'subject1', resource: 'resource1', action: 'create:any', attributes: [ attrs ] },
+ *      { subject: 'subject1', resource: 'resource1', action: 'read:own', attributes: [ attrs ] },
+ *      { subject: 'subject2', ... },
  *      ...
  *  ];</code></pre></p>
  *
  *  We turn this list into a hashtable for better performance. We aggregate
- *  the list by roles first, resources second. If possession (in action
+ *  the list by subjects first, resources second. If possession (in action
  *  value or as a separate property) is omitted, it will default to `"any"`.
  *  e.g. `"create"` ➞ `"create:any"`
  *
  *  Below are equivalent:
- *  <p><pre><code> const grants = { role: 'role1', resource: 'resource1', action: 'create:any', attributes: [ attrs ] }
- *  const same = { role: 'role1', resource: 'resource1', action: 'create', possession: 'any', attributes: [ attrs ] }</code></pre></p>
+ *  <p><pre><code> const grants = { subject: 'subject1', resource: 'resource1', action: 'create:any', attributes: [ attrs ] }
+ *  const same = { subject: 'subject1', resource: 'resource1', action: 'create', possession: 'any', attributes: [ attrs ] }</code></pre></p>
  *
  *  So we can also initialize with this flat list of grants:
  *  <p><pre><code> const ac = new AccessControl(flatList);
@@ -71,8 +71,8 @@ import { Access, IAccessInfo, Query, IQueryInfo, Permission } from './core';
  *      .resource('video').readAny()..deleteAny();
  *
  *  ac.grant('user')
- *      .readOwn('profile', ["uid", "email", "address.*", "account.*", "!account.roles"])
- *      .updateOwn('profile', ["uid", "email", "password", "address.*", "!account.roles"])
+ *      .readOwn('profile', ["uid", "email", "address.*", "account.*", "!account.subjects"])
+ *      .updateOwn('profile', ["uid", "email", "password", "address.*", "!account.subjects"])
  *      .deleteOwn('profile')
  *      .createOwn('video', ["*", "!geo.*"])
  *      .readAny('video')
@@ -218,54 +218,54 @@ declare class AccessControl {
      */
     lock(): AccessControl;
     /**
-     *  Extends the given role(s) with privileges of one or more other roles.
+     *  Extends the given subject(s) with privileges of one or more other subjects.
      *  @chainable
      *
-     *  @param {string|Array<String>} roles Role(s) to be extended. Single role
-     *         as a `String` or multiple roles as an `Array`. Note that if a
-     *         role does not exist, it will be automatically created.
+     *  @param {string|Array<String>} subjects Subject(s) to be extended. Single subject
+     *         as a `String` or multiple subjects as an `Array`. Note that if a
+     *         subject does not exist, it will be automatically created.
      *
-     *  @param {string|Array<String>} extenderRoles Role(s) to inherit from.
-     *         Single role as a `String` or multiple roles as an `Array`. Note
-     *         that if a extender role does not exist, it will throw.
+     *  @param {string|Array<String>} extenderRoles Subject(s) to inherit from.
+     *         Single subject as a `String` or multiple subjects as an `Array`. Note
+     *         that if a extender subject does not exist, it will throw.
      *
      *  @returns {AccessControl} - `AccessControl` instance for chaining.
      *
-     *  @throws {AccessControlError} - If a role is extended by itself or a
-     *  non-existent role. Or if called after `.lock()` is called.
+     *  @throws {AccessControlError} - If a subject is extended by itself or a
+     *  non-existent subject. Or if called after `.lock()` is called.
      */
-    extendRole(roles: string | string[], extenderRoles: string | string[]): AccessControl;
+    extendRole(subjects: string | string[], extenderRoles: string | string[]): AccessControl;
     /**
-     *  Removes all the given role(s) and their granted permissions, at once.
+     *  Removes all the given subject(s) and their granted permissions, at once.
      *  @chainable
      *
-     *  @param {string|Array<String>} roles - An array of roles to be removed.
-     *      Also accepts a string that can be used to remove a single role.
+     *  @param {string|Array<String>} subjects - An array of subjects to be removed.
+     *      Also accepts a string that can be used to remove a single subject.
      *
      *  @returns {AccessControl} - `AccessControl` instance for chaining.
      *
      *  @throws {AccessControlError} - If called after `.lock()` is called.
      */
-    removeRoles(roles: string | string[]): AccessControl;
+    removeRoles(subjects: string | string[]): AccessControl;
     /**
-     *  Removes all the given resources for all roles, at once.
-     *  Pass the `roles` argument to remove access to resources for those
-     *  roles only.
+     *  Removes all the given resources for all subjects, at once.
+     *  Pass the `subjects` argument to remove access to resources for those
+     *  subjects only.
      *  @chainable
      *
      *  @param {string|Array<String>} resources - A single or array of resources to
      *      be removed.
-     *  @param {string|Array<String>} [roles] - A single or array of roles to
-     *      be removed. If omitted, permissions for all roles to all given
+     *  @param {string|Array<String>} [subjects] - A single or array of subjects to
+     *      be removed. If omitted, permissions for all subjects to all given
      *      resources will be removed.
      *
      *  @returns {AccessControl} - `AccessControl` instance for chaining.
      *
      *  @throws {AccessControlError} - If called after `.lock()` is called.
      */
-    removeResources(resources: string | string[], roles?: string | string[]): AccessControl;
+    removeResources(resources: string | string[], subjects?: string | string[]): AccessControl;
     /**
-     *  Gets all the unique roles that have at least one access information.
+     *  Gets all the unique subjects that have at least one access information.
      *
      *  @returns {Array<String>}
      *
@@ -275,37 +275,37 @@ declare class AccessControl {
      */
     getRoles(): string[];
     /**
-     *  Gets the list of inherited roles by the given role.
+     *  Gets the list of inherited subjects by the given subject.
      *  @name AccessControl#getInheritedRolesOf
      *  @alias AccessControl#getExtendedRolesOf
      *  @function
      *
-     *  @param {string} role - Target role name.
+     *  @param {string} subject - Target subject name.
      *
      *  @returns {Array<String>}
      */
-    getInheritedRolesOf(role: string): string[];
+    getInheritedRolesOf(subject: string): string[];
     /**
      *  Alias of `getInheritedRolesOf`
      *  @private
      */
-    getExtendedRolesOf(role: string): string[];
+    getExtendedRolesOf(subject: string): string[];
     /**
      *  Gets all the unique resources that are granted access for at
-     *  least one role.
+     *  least one subject.
      *
      *  @returns {Array<String>}
      */
     getResources(): string[];
     /**
-     *  Checks whether the grants include the given role or roles.
+     *  Checks whether the grants include the given subject or subjects.
      *
-     *  @param {string|string[]} role - Role to be checked. You can also pass an
-     *  array of strings to check multiple roles at once.
+     *  @param {string|string[]} subject - Subject to be checked. You can also pass an
+     *  array of strings to check multiple subjects at once.
      *
      *  @returns {Boolean}
      */
-    hasRole(role: string | string[]): boolean;
+    hasRole(subject: string | string[]): boolean;
     /**
      *  Checks whether grants include the given resource or resources.
      *
@@ -317,7 +317,7 @@ declare class AccessControl {
     hasResource(resource: string | string[]): boolean;
     /**
      *  Gets an instance of `Query` object. This is used to check whether the
-     *  defined access is allowed for the given role(s) and resource. This
+     *  defined access is allowed for the given subject(s) and resource. This
      *  object provides chainable methods to define and query the access
      *  permissions to be checked.
      *  @name AccessControl#can
@@ -325,8 +325,8 @@ declare class AccessControl {
      *  @function
      *  @chainable
      *
-     *  @param {string|Array|IQueryInfo} role - A single role (as a string), a
-     *  list of roles (as an array) or an
+     *  @param {string|Array|IQueryInfo} subject - A single subject (as a string), a
+     *  list of subjects (as an array) or an
      *  {@link ?api=ac#AccessControl~IQueryInfo|`IQueryInfo` object} that fully
      *  or partially defines the access to be checked.
      *
@@ -339,27 +339,27 @@ declare class AccessControl {
      *
      *  ac.can('admin').createAny('profile');
      *  // equivalent to:
-     *  ac.can().role('admin').createAny('profile');
+     *  ac.can().subject('admin').createAny('profile');
      *  // equivalent to:
-     *  ac.can().role('admin').resource('profile').createAny();
+     *  ac.can().subject('admin').resource('profile').createAny();
      *
-     *  // To check for multiple roles:
+     *  // To check for multiple subjects:
      *  ac.can(['admin', 'user']).createOwn('profile');
-     *  // Note: when multiple roles checked, acquired attributes are unioned (merged).
+     *  // Note: when multiple subjects checked, acquired attributes are unioned (merged).
      */
-    can(role: string | string[] | IQueryInfo): Query;
+    can(subject: string | string[] | IQueryInfo): Query;
     /**
      *  Alias of `can()`.
      *  @private
      */
-    query(role: string | string[] | IQueryInfo): Query;
+    query(subject: string | string[] | IQueryInfo): Query;
     /**
      *  Gets an instance of `Permission` object that checks and defines the
-     *  granted access permissions for the target resource and role. Normally
+     *  granted access permissions for the target resource and subject. Normally
      *  you would use `AccessControl#can()` method to check for permissions but
      *  this is useful if you need to check at once by passing a `IQueryInfo`
      *  object; instead of chaining methods (as in
-     *  `.can(<role>).<action>(<resource>)`).
+     *  `.can(<subject>).<action>(<resource>)`).
      *
      *  @param {IQueryInfo} queryInfo - A fulfilled
      *  {@link ?api=ac#AccessControl~IQueryInfo|`IQueryInfo` object}.
@@ -371,7 +371,7 @@ declare class AccessControl {
      *  @example
      *  const ac = new AccessControl(grants);
      *  const permission = ac.permission({
-     *      role: "user",
+     *      subject: "user",
      *      action: "update:own",
      *      resource: "profile"
      *  });
@@ -382,23 +382,23 @@ declare class AccessControl {
     permission(queryInfo: IQueryInfo): Permission;
     /**
      *  Gets an instance of `Grant` (inner) object. This is used to grant access
-     *  to specified resource(s) for the given role(s).
+     *  to specified resource(s) for the given subject(s).
      *  @name AccessControl#grant
      *  @alias AccessControl#allow
      *  @function
      *  @chainable
      *
-     *  @param {string|Array<String>|IAccessInfo} [role] A single role (as a
-     *  string), a list of roles (as an array) or an
+     *  @param {string|Array<String>|IAccessInfo} [subject] A single subject (as a
+     *  string), a list of subjects (as an array) or an
      *  {@link ?api=ac#AccessControl~IAccessInfo|`IAccessInfo` object} that
      *  fully or partially defines the access to be granted. This can be omitted
-     *  and chained with `.role()` to define the role.
+     *  and chained with `.subject()` to define the subject.
      *
      *  @return {Access} - The returned object provides chainable properties to
      *  build and define the access to be granted. See the examples for details.
      *  See {@link ?api=ac#AccessControl~Access|`Access` inner class}.
      *
-     *  @throws {AccessControlError} - If `role` is explicitly set to an invalid value.
+     *  @throws {AccessControlError} - If `subject` is explicitly set to an invalid value.
      *  @throws {AccessControlError} - If called after `.lock()` is called.
      *
      *  @example
@@ -407,45 +407,45 @@ declare class AccessControl {
      *
      *  ac.grant('admin').createAny('profile', attributes);
      *  // equivalent to:
-     *  ac.grant().role('admin').createAny('profile', attributes);
+     *  ac.grant().subject('admin').createAny('profile', attributes);
      *  // equivalent to:
-     *  ac.grant().role('admin').resource('profile').createAny(null, attributes);
+     *  ac.grant().subject('admin').resource('profile').createAny(null, attributes);
      *  // equivalent to:
      *  ac.grant({
-     *      role: 'admin',
+     *      subject: 'admin',
      *      resource: 'profile',
      *  }).createAny(null, attributes);
      *  // equivalent to:
      *  ac.grant({
-     *      role: 'admin',
+     *      subject: 'admin',
      *      resource: 'profile',
      *      action: 'create:any',
      *      attributes: attributes
      *  });
      *  // equivalent to:
      *  ac.grant({
-     *      role: 'admin',
+     *      subject: 'admin',
      *      resource: 'profile',
      *      action: 'create',
      *      possession: 'any', // omitting this will default to 'any'
      *      attributes: attributes
      *  });
      *
-     *  // To grant same resource and attributes for multiple roles:
+     *  // To grant same resource and attributes for multiple subjects:
      *  ac.grant(['admin', 'user']).createOwn('profile', attributes);
      *
      *  // Note: when attributes is omitted, it will default to `['*']`
      *  // which means all attributes (of the resource) are allowed.
      */
-    grant(role?: string | string[] | IAccessInfo): Access;
+    grant(subject?: string | string[] | IAccessInfo): Access;
     /**
      *  Alias of `grant()`.
      *  @private
      */
-    allow(role?: string | string[] | IAccessInfo): Access;
+    allow(subject?: string | string[] | IAccessInfo): Access;
     /**
      *  Gets an instance of `Access` object. This is used to deny access to
-     *  specified resource(s) for the given role(s). Denying will only remove a
+     *  specified resource(s) for the given subject(s). Denying will only remove a
      *  previously created grant. So if not granted before, you don't need to
      *  deny an access.
      *  @name AccessControl#deny
@@ -453,8 +453,8 @@ declare class AccessControl {
      *  @function
      *  @chainable
      *
-     *  @param {string|Array<String>|IAccessInfo} role A single role (as a
-     *  string), a list of roles (as an array) or an
+     *  @param {string|Array<String>|IAccessInfo} subject A single subject (as a
+     *  string), a list of subjects (as an array) or an
      *  {@link ?api=ac#AccessControl~IAccessInfo|`IAccessInfo` object} that
      *  fully or partially defines the access to be denied.
      *
@@ -462,7 +462,7 @@ declare class AccessControl {
      *  build and define the access to be granted. See
      *  {@link ?api=ac#AccessControl~Access|`Access` inner class}.
      *
-     *  @throws {AccessControlError} - If `role` is explicitly set to an invalid value.
+     *  @throws {AccessControlError} - If `subject` is explicitly set to an invalid value.
      *  @throws {AccessControlError} - If called after `.lock()` is called.
      *
      *  @example
@@ -470,41 +470,41 @@ declare class AccessControl {
      *
      *  ac.deny('admin').createAny('profile');
      *  // equivalent to:
-     *  ac.deny().role('admin').createAny('profile');
+     *  ac.deny().subject('admin').createAny('profile');
      *  // equivalent to:
-     *  ac.deny().role('admin').resource('profile').createAny();
+     *  ac.deny().subject('admin').resource('profile').createAny();
      *  // equivalent to:
      *  ac.deny({
-     *      role: 'admin',
+     *      subject: 'admin',
      *      resource: 'profile',
      *  }).createAny();
      *  // equivalent to:
      *  ac.deny({
-     *      role: 'admin',
+     *      subject: 'admin',
      *      resource: 'profile',
      *      action: 'create:any'
      *  });
      *  // equivalent to:
      *  ac.deny({
-     *      role: 'admin',
+     *      subject: 'admin',
      *      resource: 'profile',
      *      action: 'create',
      *      possession: 'any' // omitting this will default to 'any'
      *  });
      *
-     *  // To deny same resource for multiple roles:
+     *  // To deny same resource for multiple subjects:
      *  ac.deny(['admin', 'user']).createOwn('profile');
      */
-    deny(role?: string | string[] | IAccessInfo): Access;
+    deny(subject?: string | string[] | IAccessInfo): Access;
     /**
      *  Alias of `deny()`.
      *  @private
      */
-    reject(role?: string | string[] | IAccessInfo): Access;
+    reject(subject?: string | string[] | IAccessInfo): Access;
     /**
      *  @private
      */
-    _removePermission(resources: string | string[], roles?: string | string[], actionPossession?: string): void;
+    _removePermission(resources: string | string[], subjects?: string | string[], actionPossession?: string): void;
     /**
      *  Documented separately in enums/Action
      *  @private

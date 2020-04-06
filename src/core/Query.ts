@@ -6,7 +6,7 @@ import { utils } from '../utils';
  *  Represents the inner `Query` class that helps build an access information
  *  for querying and checking permissions, from the underlying grants model.
  *  You can get a first instance of this class by calling
- *  `AccessControl#can(<role>)` method.
+ *  `AccessControl#can(<subject>)` method.
  *  @class
  *  @inner
  *  @memberof AccessControl
@@ -34,28 +34,28 @@ class Query {
      *  @param {Any} grants
      *         Underlying grants model against which the permissions will be
      *         queried and checked.
-     *  @param {string|Array<String>|IQueryInfo} [roleOrInfo]
-     *         Either a single or array of roles or an
+     *  @param {string|Array<String>|IQueryInfo} [subjectOrInfo]
+     *         Either a single or array of subjects or an
      *         {@link ?api=ac#AccessControl~IQueryInfo|`IQueryInfo` arbitrary object}.
      */
-    constructor(grants: any, roleOrInfo?: string | string[] | IQueryInfo) {
+    constructor(grants: any, subjectOrInfo?: string | string[] | IQueryInfo) {
         this._grants = grants;
 
-        if (typeof roleOrInfo === 'string' || Array.isArray(roleOrInfo)) {
-            // if this is just role(s); a string or array; we start building
+        if (typeof subjectOrInfo === 'string' || Array.isArray(subjectOrInfo)) {
+            // if this is just subject(s); a string or array; we start building
             // the grant object for this.
-            this.role(roleOrInfo);
-        } else if (utils.type(roleOrInfo) === 'object') {
+            this.subject(subjectOrInfo);
+        } else if (utils.type(subjectOrInfo) === 'object') {
             // if this is a (permission) object, we directly build attributes
             // from grants.
-            if (Object.keys(roleOrInfo).length === 0) {
+            if (Object.keys(subjectOrInfo).length === 0) {
                 throw new AccessControlError('Invalid IQueryInfo: {}');
             }
-            this._ = roleOrInfo as IQueryInfo;
-        } else if (roleOrInfo !== undefined) {
-            // undefined is allowed (`role` can be omitted) but throw if some
+            this._ = subjectOrInfo as IQueryInfo;
+        } else if (subjectOrInfo !== undefined) {
+            // undefined is allowed (`subject` can be omitted) but throw if some
             // other type is passed.
-            throw new AccessControlError('Invalid role(s), expected a valid string, string[] or IQueryInfo.');
+            throw new AccessControlError('Invalid subject(s), expected a valid string, string[] or IQueryInfo.');
         }
     }
 
@@ -64,14 +64,14 @@ class Query {
     // -------------------------------
 
     /**
-     *  A chainer method that sets the role(s) for this `Query` instance.
-     *  @param {String|Array<String>} roles
-     *         A single or array of roles.
+     *  A chainer method that sets the subject(s) for this `Query` instance.
+     *  @param {String|Array<String>} subjects
+     *         A single or array of subjects.
      *  @returns {Query}
      *           Self instance of `Query`.
      */
-    role(role: string | string[]): Query {
-        this._.role = role;
+    subject(subject: string | string[]): Query {
+        this._.subject = subject;
         return this;
     }
 
@@ -89,7 +89,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "create" their "own" resource.
+     *  subject(s) can "create" their "own" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -109,7 +109,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "create" "any" resource.
+     *  subject(s) can "create" "any" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -136,7 +136,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "read" their "own" resource.
+     *  subject(s) can "read" their "own" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -156,7 +156,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "read" "any" resource.
+     *  subject(s) can "read" "any" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -183,7 +183,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "update" their "own" resource.
+     *  subject(s) can "update" their "own" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -203,7 +203,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "update" "any" resource.
+     *  subject(s) can "update" "any" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -230,7 +230,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "delete" their "own" resource.
+     *  subject(s) can "delete" their "own" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.
@@ -250,7 +250,7 @@ class Query {
 
     /**
      *  Queries the underlying grant model and checks whether the current
-     *  role(s) can "delete" "any" resource.
+     *  subject(s) can "delete" "any" resource.
      *
      *  @param {String} [resource]
      *         Defines the target resource to be checked.

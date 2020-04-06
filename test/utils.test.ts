@@ -204,7 +204,7 @@ describe('Test Suite: utils (core)', () => {
         expect(() => utils.validRoleObject(grants, 'admin')).not.toThrow();
         grants.admin = { 'account': { 'read:all': ['*'] } };
         helper.expectACError(() => utils.validRoleObject(grants, 'admin'));
-        grants.admin = { '$extend': ['*'] }; // cannot inherit non-existent role(s)
+        grants.admin = { '$extend': ['*'] }; // cannot inherit non-existent subject(s)
         helper.expectACError(() => utils.validRoleObject(grants, 'admin'));
 
         grants.user = { 'account': { 'read:own': ['*'] } };
@@ -222,22 +222,22 @@ describe('Test Suite: utils (core)', () => {
 
     test('#normalizeQueryInfo(), #normalizeAccessInfo()', () => {
         helper.expectACError(() => utils.normalizeQueryInfo(null));
-        helper.expectACError(() => utils.normalizeQueryInfo({ role: null }));
-        helper.expectACError(() => (utils as any).normalizeQueryInfo({ role: 1 }));
-        helper.expectACError(() => utils.normalizeQueryInfo({ role: [] }));
-        helper.expectACError(() => utils.normalizeQueryInfo({ role: '' }));
-        helper.expectACError(() => utils.normalizeQueryInfo({ role: 'sa', resource: '' }));
-        helper.expectACError(() => (utils as any).normalizeQueryInfo({ role: 'sa', resource: null }));
-        helper.expectACError(() => (utils as any).normalizeQueryInfo({ role: 'sa', resource: [] }));
+        helper.expectACError(() => utils.normalizeQueryInfo({ subject: null }));
+        helper.expectACError(() => (utils as any).normalizeQueryInfo({ subject: 1 }));
+        helper.expectACError(() => utils.normalizeQueryInfo({ subject: [] }));
+        helper.expectACError(() => utils.normalizeQueryInfo({ subject: '' }));
+        helper.expectACError(() => utils.normalizeQueryInfo({ subject: 'sa', resource: '' }));
+        helper.expectACError(() => (utils as any).normalizeQueryInfo({ subject: 'sa', resource: null }));
+        helper.expectACError(() => (utils as any).normalizeQueryInfo({ subject: 'sa', resource: [] }));
 
         helper.expectACError(() => utils.normalizeAccessInfo(null));
-        helper.expectACError(() => utils.normalizeAccessInfo({ role: null }));
-        helper.expectACError(() => utils.normalizeAccessInfo({ role: [] }));
-        helper.expectACError(() => utils.normalizeAccessInfo({ role: '' }));
-        helper.expectACError(() => (utils as any).normalizeAccessInfo({ role: 1 }));
-        helper.expectACError(() => utils.normalizeAccessInfo({ role: 'sa', resource: '' }));
-        helper.expectACError(() => (utils as any).normalizeAccessInfo({ role: 'sa', resource: null }));
-        helper.expectACError(() => (utils as any).normalizeAccessInfo({ role: 'sa', resource: [] }));
+        helper.expectACError(() => utils.normalizeAccessInfo({ subject: null }));
+        helper.expectACError(() => utils.normalizeAccessInfo({ subject: [] }));
+        helper.expectACError(() => utils.normalizeAccessInfo({ subject: '' }));
+        helper.expectACError(() => (utils as any).normalizeAccessInfo({ subject: 1 }));
+        helper.expectACError(() => utils.normalizeAccessInfo({ subject: 'sa', resource: '' }));
+        helper.expectACError(() => (utils as any).normalizeAccessInfo({ subject: 'sa', resource: null }));
+        helper.expectACError(() => (utils as any).normalizeAccessInfo({ subject: 'sa', resource: [] }));
     });
 
     test('#getRoleHierarchyOf()', () => {
@@ -318,12 +318,12 @@ describe('Test Suite: utils (core)', () => {
             }
         };
         let query: IQueryInfo = {
-            role: 'admin',
+            subject: 'admin',
             resource: 'account',
             action: 'read'
         };
         expect(utils.getUnionAttrsOfRoles(grants, query)).toEqual([]);
-        query.role = 'nonexisting';
+        query.subject = 'nonexisting';
         helper.expectACError(() => utils.getUnionAttrsOfRoles(grants, query));
     });
 

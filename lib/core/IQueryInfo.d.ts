@@ -7,10 +7,10 @@
  */
 interface IQueryInfo {
     /**
-     *  Indicates a single or multiple roles to be queried.
+     *  Indicates a single or multiple subjects to be queried.
      *  @type {String|Array<String>}
      */
-    role?: string | string[];
+    subject?: string | string[];
     /**
      *  Indicates the resource to be queried.
      *  @type {String}
@@ -18,7 +18,7 @@ interface IQueryInfo {
     resource?: string;
     /**
      *  Defines the type of the operation that is (or not) to be performed on
-     *  the resource by the defined role(s).
+     *  the resource by the defined subject(s).
      *  See {@link ?api=ac#AccessControl.Action|`AccessControl.Action` enumeration}
      *  for possible values.
      *  @type {String}

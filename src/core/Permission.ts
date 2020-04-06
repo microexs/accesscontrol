@@ -4,7 +4,7 @@ import { utils } from '../utils';
 
 /**
  *  Represents the inner `Permission` class that defines the granted or denied
- *  access permissions for the target resource and role.
+ *  access permissions for the target resource and subject.
  *
  *  You can check for a permission in two ways:
  *
@@ -22,7 +22,7 @@ import { utils } from '../utils';
  *  Or you can call {@link ?api=ac#AccessControl#permission|`AccessControl#permission`}
  *  by passing a fulfilled {@link ?api=ac#AccessControl#IQueryInfo|`IQueryInfo` object}.
  *  <p><pre><code> var permission = ac.permission({
- *      role: 'user',
+ *      subject: 'user',
  *      resource: 'video',
  *      action: 'create',
  *      possession: 'any'
@@ -52,27 +52,27 @@ class Permission {
     constructor(grants: any, query: IQueryInfo) {
         // set attributes first. this also validates the `query` object.
         this._.attributes = utils.getUnionAttrsOfRoles(grants, query);
-        this._.role = query.role;
+        this._.subject = query.subject;
         this._.resource = query.resource;
     }
 
     /**
-     *  Specifies the roles for which the permission is queried for.
-     *  Even if the permission is queried for a single role, this will still
+     *  Specifies the subjects for which the permission is queried for.
+     *  Even if the permission is queried for a single subject, this will still
      *  return an array.
      *
-     *  If the returned array has multiple roles, this does not necessarily mean
-     *  that the queried permission is granted or denied for each and all roles.
-     *  Note that when a permission is queried for multiple roles, attributes
-     *  are unioned (merged) for all given roles. This means "at least one of
-     *  these roles" have the permission for this action and resource attribute.
+     *  If the returned array has multiple subjects, this does not necessarily mean
+     *  that the queried permission is granted or denied for each and all subjects.
+     *  Note that when a permission is queried for multiple subjects, attributes
+     *  are unioned (merged) for all given subjects. This means "at least one of
+     *  these subjects" have the permission for this action and resource attribute.
      *
-     *  @name AccessControl~Permission#roles
+     *  @name AccessControl~Permission#subjects
      *  @type {Array<String>}
      *  @readonly
      */
-    get roles(): string[] {
-        return this._.role;
+    get subjects(): string[] {
+        return this._.subject;
     }
 
     /**
@@ -90,9 +90,9 @@ class Permission {
      *  Gets an array of allowed attributes which are defined via
      *  Glob notation. If access is not granted, this will be an empty array.
      *
-     *  Note that when a permission is queried for multiple roles, attributes
-     *  are unioned (merged) for all given roles. This means "at least one of
-     *  these roles" have the permission for this action and resource attribute.
+     *  Note that when a permission is queried for multiple subjects, attributes
+     *  are unioned (merged) for all given subjects. This means "at least one of
+     *  these subjects" have the permission for this action and resource attribute.
      *
      *  @name AccessControl~Permission#attributes
      *  @type {Array<String>}

@@ -34,9 +34,9 @@ declare class Access {
      *
      *  @param {AccessControl} ac
      *         AccessControl instance.
-     *  @param {String|Array<String>|IAccessInfo} [roleOrInfo]
+     *  @param {String|Array<String>|IAccessInfo} [subjectOrInfo]
      *         Either an `IAccessInfo` object, a single or an array of
-     *         roles. If an object is passed, possession and attributes
+     *         subjects. If an object is passed, possession and attributes
      *         properties are optional. CAUTION: if attributes is omitted,
      *         and access is not denied, it will default to `["*"]` which means
      *         "all attributes allowed". If possession is omitted, it will
@@ -44,7 +44,7 @@ declare class Access {
      *  @param {Boolean} denied
      *         Specifies whether this `Access` is denied.
      */
-    constructor(ac: AccessControl, roleOrInfo?: string | string[] | IAccessInfo, denied?: boolean);
+    constructor(ac: AccessControl, subjectOrInfo?: string | string[] | IAccessInfo, denied?: boolean);
     /**
      *  Specifies whether this access is initally denied.
      *  @name AccessControl~Access#denied
@@ -53,13 +53,13 @@ declare class Access {
      */
     readonly denied: boolean;
     /**
-     *  A chainer method that sets the role(s) for this `Access` instance.
+     *  A chainer method that sets the subject(s) for this `Access` instance.
      *  @param {String|Array<String>} value
-     *         A single or array of roles.
+     *         A single or array of subjects.
      *  @returns {Access}
      *           Self instance of `Access`.
      */
-    role(value: string | string[]): Access;
+    subject(value: string | string[]): Access;
     /**
      *  A chainer method that sets the resource for this `Access` instance.
      *  @param {String|Array<String>} value
@@ -77,13 +77,13 @@ declare class Access {
      */
     attributes(value: string | string[]): Access;
     /**
-     *  Sets the roles to be extended for this `Access` instance.
+     *  Sets the subjects to be extended for this `Access` instance.
      *  @alias Access#inherit
      *  @name AccessControl~Access#extend
      *  @function
      *
-     *  @param {String|Array<String>} roles
-     *         A single or array of roles.
+     *  @param {String|Array<String>} subjects
+     *         A single or array of subjects.
      *  @returns {Access}
      *           Self instance of `Access`.
      *
@@ -93,18 +93,18 @@ declare class Access {
      *  const permission = ac.can('admin').createAny('video');
      *  console.log(permission.granted); // true
      */
-    extend(roles: string | string[]): Access;
+    extend(subjects: string | string[]): Access;
     /**
      *  Alias of `extend`.
      *  @private
      */
-    inherit(roles: string | string[]): Access;
+    inherit(subjects: string | string[]): Access;
     /**
-     *  Shorthand to switch to a new `Access` instance with a different role
+     *  Shorthand to switch to a new `Access` instance with a different subject
      *  within the method chain.
      *
-     *  @param {String|Array<String>|IAccessInfo} [roleOrInfo]
-     *         Either a single or an array of roles or an
+     *  @param {String|Array<String>|IAccessInfo} [subjectOrInfo]
+     *         Either a single or an array of subjects or an
      *         {@link ?api=ac#AccessControl~IAccessInfo|`IAccessInfo` object}.
      *
      *  @returns {Access}
@@ -114,13 +114,13 @@ declare class Access {
      *  ac.grant('user').createOwn('video')
      *    .grant('admin').updateAny('video');
      */
-    grant(roleOrInfo?: string | string[] | IAccessInfo): Access;
+    grant(subjectOrInfo?: string | string[] | IAccessInfo): Access;
     /**
      *  Shorthand to switch to a new `Access` instance with a different
-     *  (or same) role within the method chain.
+     *  (or same) subject within the method chain.
      *
-     *  @param {String|Array<String>|IAccessInfo} [roleOrInfo]
-     *         Either a single or an array of roles or an
+     *  @param {String|Array<String>|IAccessInfo} [subjectOrInfo]
+     *         Either a single or an array of subjects or an
      *         {@link ?api=ac#AccessControl~IAccessInfo|`IAccessInfo` object}.
      *
      *  @returns {Access}
@@ -130,7 +130,7 @@ declare class Access {
      *  ac.grant('admin').createAny('video')
      *    .deny('user').deleteAny('video');
      */
-    deny(roleOrInfo?: string | string[] | IAccessInfo): Access;
+    deny(subjectOrInfo?: string | string[] | IAccessInfo): Access;
     /**
      *  Chainable, convenience shortcut for {@link ?api=ac#AccessControl#lock|`AccessControl#lock()`}.
      *  @returns {Access}

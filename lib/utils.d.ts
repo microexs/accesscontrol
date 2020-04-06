@@ -2,7 +2,7 @@ import { AccessControl } from './';
 import { IAccessInfo, IQueryInfo } from './core';
 /**
  *  List of reserved keywords.
- *  i.e. Roles, resources with these names are not allowed.
+ *  i.e. Subjects, resources with these names are not allowed.
  */
 declare const RESERVED_KEYWORDS: string[];
 /**
@@ -21,25 +21,25 @@ declare const utils: {
     deepFreeze(o: any): any;
     each(array: any, callback: any, thisArg?: any): void;
     eachKey(object: any, callback: any, thisArg?: any): void;
-    eachRole(grants: any, callback: (role: any, roleName: string) => void): void;
-    eachRoleResource(grants: any, callback: (role: string, resource: string, resourceDefinition: any) => void): void;
+    eachRole(grants: any, callback: (subject: any, subjectName: string) => void): void;
+    eachRoleResource(grants: any, callback: (subject: string, resource: string, resourceDefinition: any) => void): void;
     isInfoFulfilled(info: IAccessInfo | IQueryInfo): boolean;
     validName(name: string, throwOnInvalid?: boolean): boolean;
     hasValidNames(list: any, throwOnInvalid?: boolean): boolean;
     validResourceObject(o: any): boolean;
-    validRoleObject(grants: any, roleName: string): boolean;
+    validRoleObject(grants: any, subjectName: string): boolean;
     getInspectedGrants(o: any): any;
     getResources(grants: any): string[];
     normalizeActionPossession(info: IAccessInfo | IQueryInfo, asString?: boolean): string | IAccessInfo | IQueryInfo;
     normalizeQueryInfo(query: IQueryInfo): IQueryInfo;
     normalizeAccessInfo(access: IAccessInfo, all?: boolean): IAccessInfo;
     resetAttributes(access: IAccessInfo): IAccessInfo;
-    getRoleHierarchyOf(grants: any, roleName: string, rootRole?: string): string[];
-    getFlatRoles(grants: any, roles: string | string[]): string[];
-    getNonExistentRoles(grants: any, roles: string[]): string[];
-    getCrossExtendingRole(grants: any, roleName: string, extenderRoles: string | string[]): string;
-    extendRole(grants: any, roles: string | string[], extenderRoles: string | string[]): void;
-    preCreateRoles(grants: any, roles: string | string[]): void;
+    getRoleHierarchyOf(grants: any, subjectName: string, rootRole?: string): string[];
+    getFlatRoles(grants: any, subjects: string | string[]): string[];
+    getNonExistentRoles(grants: any, subjects: string[]): string[];
+    getCrossExtendingRole(grants: any, subjectName: string, extenderRoles: string | string[]): string;
+    extendRole(grants: any, subjects: string | string[], extenderRoles: string | string[]): void;
+    preCreateRoles(grants: any, subjects: string | string[]): void;
     commitToGrants(grants: any, access: IAccessInfo, normalizeAll?: boolean): void;
     getUnionAttrsOfRoles(grants: any, query: IQueryInfo): string[];
     lockAC(ac: AccessControl): void;

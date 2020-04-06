@@ -1,7 +1,7 @@
 {
   "name": "accesscontrol",
   "version": "2.2.1",
-  "description": "Role and Attribute based Access Control for Node.js",
+  "description": "Subject and Attribute based Access Control for Node.js",
   "main": "./index.js",
   "directories": {
     "lib": "./lib",
@@ -65,7 +65,7 @@
     "access",
     "access-control",
     "acl",
-    "role",
+    "subject",
     "attribute",
     "grant",
     "deny",

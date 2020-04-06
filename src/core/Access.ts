@@ -41,9 +41,9 @@ class Access {
      *
      *  @param {AccessControl} ac
      *         AccessControl instance.
-     *  @param {String|Array<String>|IAccessInfo} [roleOrInfo]
+     *  @param {String|Array<String>|IAccessInfo} [subjectOrInfo]
      *         Either an `IAccessInfo` object, a single or an array of
-     *         roles. If an object is passed, possession and attributes
+     *         subjects. If an object is passed, possession and attributes
      *         properties are optional. CAUTION: if attributes is omitted,
      *         and access is not denied, it will default to `["*"]` which means
      *         "all attributes allowed". If possession is omitted, it will
@@ -51,26 +51,26 @@ class Access {
      *  @param {Boolean} denied
      *         Specifies whether this `Access` is denied.
      */
-    constructor(ac: AccessControl, roleOrInfo?: string | string[] | IAccessInfo, denied: boolean = false) {
+    constructor(ac: AccessControl, subjectOrInfo?: string | string[] | IAccessInfo, denied: boolean = false) {
         this._ac = ac;
         this._grants = (ac as any)._grants;
         this._.denied = denied;
 
-        if (typeof roleOrInfo === 'string' || Array.isArray(roleOrInfo)) {
-            this.role(roleOrInfo);
-        } else if (utils.type(roleOrInfo) === 'object') {
-            if (Object.keys(roleOrInfo).length === 0) {
+        if (typeof subjectOrInfo === 'string' || Array.isArray(subjectOrInfo)) {
+            this.subject(subjectOrInfo);
+        } else if (utils.type(subjectOrInfo) === 'object') {
+            if (Object.keys(subjectOrInfo).length === 0) {
                 throw new AccessControlError('Invalid IAccessInfo: {}');
             }
             // if an IAccessInfo instance is passed and it has 'action' defined, we
             // should directly commit it to grants.
-            roleOrInfo.denied = denied;
-            this._ = utils.resetAttributes(roleOrInfo);
+            subjectOrInfo.denied = denied;
+            this._ = utils.resetAttributes(subjectOrInfo);
             if (utils.isInfoFulfilled(this._)) utils.commitToGrants(this._grants, this._, true);
-        } else if (roleOrInfo !== undefined) {
-            // undefined is allowed (`roleOrInfo` can be omitted) but throw if
+        } else if (subjectOrInfo !== undefined) {
+            // undefined is allowed (`subjectOrInfo` can be omitted) but throw if
             // some other type is passed.
-            throw new AccessControlError('Invalid role(s), expected a valid string, string[] or IAccessInfo.');
+            throw new AccessControlError('Invalid subject(s), expected a valid string, string[] or IAccessInfo.');
         }
     }
 
@@ -93,18 +93,18 @@ class Access {
     // -------------------------------
 
     /**
-     *  A chainer method that sets the role(s) for this `Access` instance.
+     *  A chainer method that sets the subject(s) for this `Access` instance.
      *  @param {String|Array<String>} value
-     *         A single or array of roles.
+     *         A single or array of subjects.
      *  @returns {Access}
      *           Self instance of `Access`.
      */
-    role(value: string | string[]): Access {
+    subject(value: string | string[]): Access {
         // in case chain is not terminated (e.g. `ac.grant('user')`) we'll
-        // create/commit the roles to grants with an empty object.
+        // create/commit the subjects to grants with an empty object.
         utils.preCreateRoles(this._grants, value);
 
-        this._.role = value;
+        this._.subject = value;
         return this;
     }
 
@@ -135,13 +135,13 @@ class Access {
     }
 
     /**
-     *  Sets the roles to be extended for this `Access` instance.
+     *  Sets the subjects to be extended for this `Access` instance.
      *  @alias Access#inherit
      *  @name AccessControl~Access#extend
      *  @function
      *
-     *  @param {String|Array<String>} roles
-     *         A single or array of roles.
+     *  @param {String|Array<String>} subjects
+     *         A single or array of subjects.
      *  @returns {Access}
      *           Self instance of `Access`.
      *
@@ -151,8 +151,8 @@ class Access {
      *  const permission = ac.can('admin').createAny('video');
      *  console.log(permission.granted); // true
      */
-    extend(roles: string | string[]): Access {
-        utils.extendRole(this._grants, this._.role, roles);
+    extend(subjects: string | string[]): Access {
+        utils.extendRole(this._grants, this._.subject, subjects);
         return this;
     }
 
@@ -160,17 +160,17 @@ class Access {
      *  Alias of `extend`.
      *  @private
      */
-    inherit(roles: string | string[]): Access {
-        this.extend(roles);
+    inherit(subjects: string | string[]): Access {
+        this.extend(subjects);
         return this;
     }
 
     /**
-     *  Shorthand to switch to a new `Access` instance with a different role
+     *  Shorthand to switch to a new `Access` instance with a different subject
      *  within the method chain.
      *
-     *  @param {String|Array<String>|IAccessInfo} [roleOrInfo]
-     *         Either a single or an array of roles or an
+     *  @param {String|Array<String>|IAccessInfo} [subjectOrInfo]
+     *         Either a single or an array of subjects or an
      *         {@link ?api=ac#AccessControl~IAccessInfo|`IAccessInfo` object}.
      *
      *  @returns {Access}
@@ -180,16 +180,16 @@ class Access {
      *  ac.grant('user').createOwn('video')
      *    .grant('admin').updateAny('video');
      */
-    grant(roleOrInfo?: string | string[] | IAccessInfo): Access {
-        return (new Access(this._ac, roleOrInfo, false)).attributes(['*']);
+    grant(subjectOrInfo?: string | string[] | IAccessInfo): Access {
+        return (new Access(this._ac, subjectOrInfo, false)).attributes(['*']);
     }
 
     /**
      *  Shorthand to switch to a new `Access` instance with a different
-     *  (or same) role within the method chain.
+     *  (or same) subject within the method chain.
      *
-     *  @param {String|Array<String>|IAccessInfo} [roleOrInfo]
-     *         Either a single or an array of roles or an
+     *  @param {String|Array<String>|IAccessInfo} [subjectOrInfo]
+     *         Either a single or an array of subjects or an
      *         {@link ?api=ac#AccessControl~IAccessInfo|`IAccessInfo` object}.
      *
      *  @returns {Access}
@@ -199,8 +199,8 @@ class Access {
      *  ac.grant('admin').createAny('video')
      *    .deny('user').deleteAny('video');
      */
-    deny(roleOrInfo?: string | string[] | IAccessInfo): Access {
-        return (new Access(this._ac, roleOrInfo, true)).attributes([]);
+    deny(subjectOrInfo?: string | string[] | IAccessInfo): Access {
+        return (new Access(this._ac, subjectOrInfo, true)).attributes([]);
     }
 
     /**

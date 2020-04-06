@@ -7,10 +7,10 @@
  */
 interface IAccessInfo {
     /**
-     *  Indicates a single or multiple roles for this access information.
+     *  Indicates a single or multiple subjects for this access information.
      *  @type {String|Array<String>}
      */
-    role?: string | string[];
+    subject?: string | string[];
     /**
      *  Indicates a single or multiple target resources for this access
      *  information.
@@ -25,7 +25,7 @@ interface IAccessInfo {
     attributes?: string | string[];
     /**
      *  Defines the type of the operation that is (or not) to be performed on
-     *  the resource(s) by the defined role(s).
+     *  the resource(s) by the defined subject(s).
      *  See {@link ?api=ac#AccessControl.Action|`AccessControl.Action` enumeration}
      *  for possible values.
      *  @type {String}
@@ -39,7 +39,7 @@ interface IAccessInfo {
      */
     possession?: string;
     /**
-     *  Single or multiple roles for this access information.
+     *  Single or multiple subjects for this access information.
      *  @private
      *  @type {String|Array<String>}
      */
