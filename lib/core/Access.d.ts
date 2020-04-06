@@ -362,6 +362,6 @@ declare class Access {
      *  @returns {Access}
      *           Self instance of `Access`.
      */
-    private _prepareAndCommit(action, possession, resource?, attributes?);
+    private _prepareAndCommit;
 }
 export { Access };
