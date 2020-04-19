@@ -1,5 +1,5 @@
 import { Access, IAccessInfo, Query, IQueryInfo, Permission, AccessControlError } from './core';
-import { Action, Possession, actions, possessions } from './enums';
+import { actions, possessions } from './enums';
 import { utils, ERR_LOCK } from './utils';
 
 /**
@@ -118,11 +118,13 @@ class AccessControl {
      *  @param {Object|Array} [grants] - A list containing the access grant
      *      definitions. See the structure of this object in the examples.
      */
-    constructor(grants?: any, store?: (grants: any) => void) {
+    constructor(grants: any = {}, store?: (grants: any) => void) {
+        if ([true, false, '', NaN, new Date(), () => { }].indexOf(grants) > -1) {
+            throw new AccessControlError('Invalid initial grants.');
+        }
         // explicit undefined is not allowed
-        if (arguments.length === 0) grants = {};
-        this.setGrants(grants);
         this.store = store ?? (() => { });
+        this.setGrants(grants ?? {});
     }
 
     // -------------------------------
@@ -277,9 +279,9 @@ class AccessControl {
      *  @throws {AccessControlError} - If a subject is extended by itself or a
      *  non-existent subject. Or if called after `.lock()` is called.
      */
-    extendRole(subjects: string | string[], extenderRoles: string | string[]): AccessControl {
+    extendRole(subjects: string | string[], extenderRoles: string | string[], replace: boolean = false): AccessControl {
         if (this.isLocked) throw new AccessControlError(ERR_LOCK);
-        utils.extendRole(this._grants, subjects, extenderRoles);
+        utils.extendRole(this._grants, subjects, extenderRoles, replace);
         this.store(this._grants);
         return this;
     }
@@ -308,10 +310,10 @@ class AccessControl {
             }
             delete this._grants[subjectName];
         });
-        // also remove these subjects from $extend list of each remaining subject.
+        // also remove these subjects from _extend_ list of each remaining subject.
         utils.eachRole(this._grants, (subjectItem: any, subjectName: string) => {
-            if (Array.isArray(subjectItem.$extend)) {
-                subjectItem.$extend = utils.subtractArray(subjectItem.$extend, subjectsToRemove);
+            if (Array.isArray(subjectItem._extend_)) {
+                subjectItem._extend_ = utils.subtractArray(subjectItem._extend_, subjectsToRemove);
             }
         });
         this.store(this._grants);
@@ -389,6 +391,25 @@ class AccessControl {
      */
     getResources(): string[] {
         return utils.getResources(this._grants);
+    }
+
+    getPermissionsOf(subject: string, recursive = false) {
+        let subjectObj = this.getGrants()[subject];
+        if (subjectObj === undefined) {
+            throw new AccessControlError(`Invalid subject(s): ${JSON.stringify(subject)}`);
+        }
+        let permissions: string[] = [
+            ...(Object.keys(subjectObj['query'] ?? {}).map(x => `query:${x}`) ?? []),
+            ...(Object.keys(subjectObj['mutation'] ?? {}).map(x => `mutation:${x}`) ?? []),
+            ...(Object.keys(subjectObj['subscription'] ?? {}).map(x => `subscription:${x}`) ?? [])
+        ];
+        if (recursive) {
+            let subjects = this.getExtendedRolesOf(subject);
+            subjects.forEach(x => {
+                permissions = permissions.concat(this.getPermissionsOf(x))
+            })
+        }
+        return permissions;
     }
 
     /**
@@ -695,22 +716,6 @@ class AccessControl {
     // -------------------------------
     //  PUBLIC STATIC PROPERTIES
     // -------------------------------
-
-    /**
-     *  Documented separately in enums/Action
-     *  @private
-     */
-    static get Action(): any {
-        return Action;
-    }
-
-    /**
-     *  Documented separately in enums/Possession
-     *  @private
-     */
-    static get Possession(): any {
-        return Possession;
-    }
 
     /**
      *  Documented separately in AccessControlError

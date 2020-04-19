@@ -112,7 +112,7 @@ declare class AccessControl {
      *  @param {Object|Array} [grants] - A list containing the access grant
      *      definitions. See the structure of this object in the examples.
      */
-    constructor(grants?: any, store?: (grants: any) => void | PromiseLike<void>);
+    constructor(grants?: any, store?: (grants: any) => void);
     /**
      *  Specifies whether the underlying grants object is frozen and all
      *  functionality for modifying it is disabled.
@@ -235,7 +235,7 @@ declare class AccessControl {
      *  @throws {AccessControlError} - If a subject is extended by itself or a
      *  non-existent subject. Or if called after `.lock()` is called.
      */
-    extendRole(subjects: string | string[], extenderRoles: string | string[]): AccessControl;
+    extendRole(subjects: string | string[], extenderRoles: string | string[], replace?: boolean): AccessControl;
     /**
      *  Removes all the given subject(s) and their granted permissions, at once.
      *  @chainable
@@ -298,6 +298,7 @@ declare class AccessControl {
      *  @returns {Array<String>}
      */
     getResources(): string[];
+    getPermissionsOf(subject: string, recursive?: boolean): string[];
     /**
      *  Checks whether the grants include the given subject or subjects.
      *
@@ -506,16 +507,6 @@ declare class AccessControl {
      *  @private
      */
     _removePermission(resources: string | string[], subjects?: string | string[], actionPossession?: string): void;
-    /**
-     *  Documented separately in enums/Action
-     *  @private
-     */
-    static get Action(): any;
-    /**
-     *  Documented separately in enums/Possession
-     *  @private
-     */
-    static get Possession(): any;
     /**
      *  Documented separately in AccessControlError
      *  @private

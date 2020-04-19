@@ -212,6 +212,14 @@ declare class Query {
      *  @param {String} [resource]
      *  @returns {Permission}
      */
+    do(action: string): Permission;
+    /**
+     *  @private
+     *  @param {String} action
+     *  @param {String} possession
+     *  @param {String} [resource]
+     *  @returns {Permission}
+     */
     private _getPermission;
 }
 export { Query };

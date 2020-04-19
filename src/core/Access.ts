@@ -1,7 +1,7 @@
 import { AccessControl } from '../';
 import { IAccessInfo, AccessControlError } from '../core';
-import { Action, Possession, actions, possessions } from '../enums';
 import { utils } from '../utils';
+import { Possession } from '../enums/Possession';
 
 /**
  *  Represents the inner `Access` class that helps build an access information
@@ -152,7 +152,7 @@ class Access {
      *  console.log(permission.granted); // true
      */
     extend(subjects: string | string[]): Access {
-        utils.extendRole(this._grants, this._.subject, subjects);
+        utils.extendRole(this._grants, this._.subject, subjects, false);
         return this;
     }
 
@@ -236,7 +236,7 @@ class Access {
      *           another access instance to be committed.
      */
     createOwn(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.CREATE, Possession.OWN, resource, attributes);
+        return this._prepareAndCommit('create', 'own', resource, attributes);
     }
 
     /**
@@ -265,7 +265,7 @@ class Access {
      *           another access instance to be committed.
      */
     createAny(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.CREATE, Possession.ANY, resource, attributes);
+        return this._prepareAndCommit('create', 'any', resource, attributes);
     }
     /**
      *  Alias of `createAny`
@@ -298,7 +298,7 @@ class Access {
      *           another access instance to be committed.
      */
     readOwn(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.READ, Possession.OWN, resource, attributes);
+        return this._prepareAndCommit('read', 'own', resource, attributes);
     }
 
     /**
@@ -327,7 +327,7 @@ class Access {
      *           another access instance to be committed.
      */
     readAny(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.READ, Possession.ANY, resource, attributes);
+        return this._prepareAndCommit('read', 'any', resource, attributes);
     }
     /**
      *  Alias of `readAny`
@@ -360,7 +360,7 @@ class Access {
      *           another access instance to be committed.
      */
     updateOwn(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.UPDATE, Possession.OWN, resource, attributes);
+        return this._prepareAndCommit('update', 'own', resource, attributes);
     }
 
     /**
@@ -389,7 +389,7 @@ class Access {
      *           another access instance to be committed.
      */
     updateAny(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.UPDATE, Possession.ANY, resource, attributes);
+        return this._prepareAndCommit('update', 'any', resource, attributes);
     }
     /**
      *  Alias of `updateAny`
@@ -422,7 +422,7 @@ class Access {
      *           another access instance to be committed.
      */
     deleteOwn(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.DELETE, Possession.OWN, resource, attributes);
+        return this._prepareAndCommit('delete', 'own', resource, attributes);
     }
 
     /**
@@ -451,7 +451,7 @@ class Access {
      *           another access instance to be committed.
      */
     deleteAny(resource?: string | string[], attributes?: string | string[]): Access {
-        return this._prepareAndCommit(Action.DELETE, Possession.ANY, resource, attributes);
+        return this._prepareAndCommit('delete', 'any', resource, attributes);
     }
     /**
      *  Alias of `deleteAny`
@@ -459,6 +459,18 @@ class Access {
      */
     delete(resource?: string | string[], attributes?: string | string[]): Access {
         return this.deleteAny(resource, attributes);
+    }
+
+    /**
+     *  @param {String} action     [description]
+     *  @param {String|Array<String>} resource   [description]
+     *  @param {String|Array<String>} attributes [description]
+     *  @returns {Access}
+     *           Self instance of `Access`.
+     */
+    public do(action: string, attributes?: string | string[]): Access {
+        let segments = action.split(':');
+        return this._prepareAndCommit(segments[1], segments[2] as Possession, segments[0], attributes)
     }
 
     // -------------------------------
@@ -474,7 +486,7 @@ class Access {
      *  @returns {Access}
      *           Self instance of `Access`.
      */
-    private _prepareAndCommit(action: string, possession: string, resource?: string | string[], attributes?: string | string[]): Access {
+    private _prepareAndCommit(action: string, possession: Possession, resource?: string | string[], attributes?: string | string[]): Access {
         this._.action = action;
         this._.possession = possession;
         if (resource) this._.resource = resource;

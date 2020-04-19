@@ -1,6 +1,6 @@
 import { IQueryInfo, Permission, AccessControlError } from '../core';
-import { Action, Possession } from '../enums';
 import { utils } from '../utils';
+import { Possession } from '../enums/Possession';
 
 /**
  *  Represents the inner `Query` class that helps build an access information
@@ -104,7 +104,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     createOwn(resource?: string): Permission {
-        return this._getPermission(Action.CREATE, Possession.OWN, resource);
+        return this._getPermission('create', 'own', resource);
     }
 
     /**
@@ -124,7 +124,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     createAny(resource?: string): Permission {
-        return this._getPermission(Action.CREATE, Possession.ANY, resource);
+        return this._getPermission('create', 'any', resource);
     }
     /**
      *  Alias if `createAny`
@@ -151,7 +151,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     readOwn(resource?: string): Permission {
-        return this._getPermission(Action.READ, Possession.OWN, resource);
+        return this._getPermission('read', 'own', resource);
     }
 
     /**
@@ -171,7 +171,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     readAny(resource?: string): Permission {
-        return this._getPermission(Action.READ, Possession.ANY, resource);
+        return this._getPermission('read', 'any', resource);
     }
     /**
      *  Alias if `readAny`
@@ -198,7 +198,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     updateOwn(resource?: string): Permission {
-        return this._getPermission(Action.UPDATE, Possession.OWN, resource);
+        return this._getPermission('update', 'own', resource);
     }
 
     /**
@@ -218,7 +218,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     updateAny(resource?: string): Permission {
-        return this._getPermission(Action.UPDATE, Possession.ANY, resource);
+        return this._getPermission('update', 'any', resource);
     }
     /**
      *  Alias if `updateAny`
@@ -245,7 +245,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     deleteOwn(resource?: string): Permission {
-        return this._getPermission(Action.DELETE, Possession.OWN, resource);
+        return this._getPermission('delete', 'own', resource);
     }
 
     /**
@@ -265,7 +265,7 @@ class Query {
      *           the resource attributes that the permission is granted for.
      */
     deleteAny(resource?: string): Permission {
-        return this._getPermission(Action.DELETE, Possession.ANY, resource);
+        return this._getPermission('delete', 'any', resource);
     }
     /**
      *  Alias if `deleteAny`
@@ -273,6 +273,18 @@ class Query {
      */
     delete(resource?: string): Permission {
         return this.deleteAny(resource);
+    }
+
+    /**
+     *  @private
+     *  @param {String} action
+     *  @param {String} possession
+     *  @param {String} [resource]
+     *  @returns {Permission}
+     */
+    public do(action: string): Permission {
+        let segments = action.split(':');
+        return this._getPermission(segments[1], segments[2] as Possession, segments[0])
     }
 
     // -------------------------------
@@ -286,7 +298,7 @@ class Query {
      *  @param {String} [resource]
      *  @returns {Permission}
      */
-    private _getPermission(action: string, possession: string, resource?: string): Permission {
+    private _getPermission(action: string, possession: Possession, resource?: string): Permission {
         this._.action = action;
         this._.possession = possession;
         if (resource) this._.resource = resource;

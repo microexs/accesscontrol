@@ -266,7 +266,7 @@ declare const utils: {
      *  @throws {Error} If a subject is extended by itself, a non-existent subject or
      *          a cross-inherited subject.
      */
-    extendRole(grants: any, subjects: string | string[], extenderRoles: string | string[]): void;
+    extendRole(grants: any, subjects: string | string[], extenderRoles: string | string[], replace?: boolean): void;
     /**
      *  `utils.commitToGrants()` method already creates the subjects but it's
      *  executed when the chain is terminated with either `.extend()` or an

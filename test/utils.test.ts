@@ -179,14 +179,6 @@ describe('Test Suite: utils (core)', () => {
         expect(utils.validResourceObject({ 'create:any': ['*', '!id'] })).toBe(true);
         expect(utils.validResourceObject({ 'update:own': ['*'] })).toBe(true);
 
-        helper.expectACError(() => utils.validResourceObject({ 'invalid': [], 'create': [] }));
-        helper.expectACError(() => utils.validResourceObject({ 'invalid:any': [] }));
-        helper.expectACError(() => utils.validResourceObject({ 'invalid:any': [''] }));
-        helper.expectACError(() => utils.validResourceObject({ 'read:own': ['*'], 'invalid:own': [] }));
-
-        helper.expectACError(() => utils.validResourceObject({ 'create:all': [] }));
-        helper.expectACError(() => utils.validResourceObject({ 'create:all': [] }));
-
         helper.expectACError(() => utils.validResourceObject({ 'create': null }));
         helper.expectACError(() => utils.validResourceObject({ 'create:own': undefined }));
         helper.expectACError(() => utils.validResourceObject({ 'read:own': [], 'create:any': [''] }));
@@ -202,13 +194,11 @@ describe('Test Suite: utils (core)', () => {
         expect(() => utils.validRoleObject(grants, 'admin')).not.toThrow();
         grants.admin = { 'account': { 'read': ['*'] } };
         expect(() => utils.validRoleObject(grants, 'admin')).not.toThrow();
-        grants.admin = { 'account': { 'read:all': ['*'] } };
-        helper.expectACError(() => utils.validRoleObject(grants, 'admin'));
-        grants.admin = { '$extend': ['*'] }; // cannot inherit non-existent subject(s)
+        grants.admin = { '_extend_': ['*'] }; // cannot inherit non-existent subject(s)
         helper.expectACError(() => utils.validRoleObject(grants, 'admin'));
 
         grants.user = { 'account': { 'read:own': ['*'] } };
-        grants.admin = { '$extend': ['user'] };
+        grants.admin = { '_extend_': ['user'] };
         expect(() => utils.validRoleObject(grants, 'admin')).not.toThrow();
         grants.admin = { '$': { 'account': { 'read:own': ['*'] } } }; // $: reserved
         helper.expectACError(() => utils.validRoleObject(grants, 'admin'));
@@ -243,12 +233,12 @@ describe('Test Suite: utils (core)', () => {
     test('#getRoleHierarchyOf()', () => {
         let grants: any = {
             'admin': {
-                '$extend': ['user']
+                '_extend_': ['user']
                 // 'account': { 'read:any': ['*'] }
             }
         };
         helper.expectACError(() => utils.getRoleHierarchyOf(grants, 'admin'));
-        grants.admin = { '$extend': ['admin'] };
+        grants.admin = { '_extend_': ['admin'] };
         helper.expectACError(() => utils.getRoleHierarchyOf(grants, 'admin'));
 
         grants.admin = { 'account': { 'read:any': ['*'] } };
@@ -275,10 +265,10 @@ describe('Test Suite: utils (core)', () => {
         let grants: any = {
             'user': {},
             'admin': {
-                '$extend': ['user', 'editor']
+                '_extend_': ['user', 'editor']
             },
             'editor': {
-                '$extend': ['admin']
+                '_extend_': ['admin']
             },
         };
         expect(utils.getCrossExtendingRole(grants, 'admin', ['admin'])).toEqual(null);
@@ -290,10 +280,10 @@ describe('Test Suite: utils (core)', () => {
         let grants: any = {
             'user': {},
             'admin': {
-                '$extend': ['user', 'editor']
+                '_extend_': ['user', 'editor']
             },
             'editor': {
-                '$extend': ['admin']
+                '_extend_': ['admin']
             },
             'viewer': {}
         };
@@ -314,7 +304,7 @@ describe('Test Suite: utils (core)', () => {
                 }
             },
             'admin': {
-                '$extend': ['user']
+                '_extend_': ['user']
             }
         };
         let query: IQueryInfo = {

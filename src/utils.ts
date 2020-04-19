@@ -2,14 +2,15 @@
 import * as Notation from 'notation';
 // own modules
 import { AccessControl } from './';
-import { Action, actions, Possession, possessions } from './enums';
+import { actions, possessions } from './enums';
 import { IAccessInfo, IQueryInfo, AccessControlError } from './core';
+import { Possession } from './enums/Possession';
 
 /**
  *  List of reserved keywords.
  *  i.e. Subjects, resources with these names are not allowed.
  */
-const RESERVED_KEYWORDS = ['*', '!', '$', '$extend'];
+const RESERVED_KEYWORDS = ['*', '!', '$', '_extend_'];
 
 /**
  *  Error message to be thrown after AccessControl instance is locked.
@@ -283,12 +284,6 @@ const utils = {
 
         utils.eachKey(o, action => {
             let s: string[] = action.split(':');
-            if (actions.indexOf(s[0]) === -1) {
-                throw new AccessControlError(`Invalid action: "${action}"`);
-            }
-            if (s[1] && possessions.indexOf(s[1]) === -1) {
-                throw new AccessControlError(`Invalid action possession: "${action}"`);
-            }
             let perms = o[action];
             if (!utils.isEmptyArray(perms) && !utils.isFilledStringArray(perms)) {
                 throw new AccessControlError(`Invalid resource attributes for action "${action}".`);
@@ -316,14 +311,14 @@ const utils = {
 
         utils.eachKey(subject, (resourceName: string) => {
             if (!utils.validName(resourceName, false)) {
-                if (resourceName === '$extend') {
+                if (resourceName === '_extend_') {
                     let extRoles: string[] = subject[resourceName]; // semantics
                     if (!utils.isFilledStringArray(extRoles)) {
                         throw new AccessControlError(`Invalid extend value for subject "${subjectName}": ${JSON.stringify(extRoles)}`);
                     } else {
                         // attempt to actually extend the subjects. this will throw
                         // on failure.
-                        utils.extendRole(grants, subjectName, extRoles);
+                        utils.extendRole(grants, subjectName, extRoles, false);
                     }
                 } else {
                     throw new AccessControlError(`Cannot use reserved name "${resourceName}" for a resource.`);
@@ -410,22 +405,20 @@ const utils = {
         }
 
         const s: string[] = info.action.split(':');
-        if (actions.indexOf(s[0].trim().toLowerCase()) < 0) {
-            throw new AccessControlError(`Invalid action: ${s[0]}`);
-        }
+
         info.action = s[0].trim().toLowerCase();
 
         // validate and normalize possession
-        const poss: string = info.possession || s[1];
+        const poss: Possession = info.possession || s[1] as Possession;
         if (poss) {
-            if (possessions.indexOf(poss.trim().toLowerCase()) < 0) {
+            if (poss !== 'any' && poss !== 'own') {
                 throw new AccessControlError(`Invalid action possession: ${poss}`);
             } else {
-                info.possession = poss.trim().toLowerCase();
+                info.possession = poss;
             }
         } else {
             // if no possession is set, we'll default to "any".
-            info.possession = Possession.ANY;
+            info.possession = 'any';
         }
 
         return asString
@@ -542,9 +535,9 @@ const utils = {
         if (!subject) throw new AccessControlError(`Subject not found: "${subjectName}"`);
 
         let arr: string[] = [subjectName];
-        if (!Array.isArray(subject.$extend) || subject.$extend.length === 0) return arr;
+        if (!Array.isArray(subject._extend_) || subject._extend_.length === 0) return arr;
 
-        subject.$extend.forEach((exRoleName: string) => {
+        subject._extend_.forEach((exRoleName: string) => {
             if (!grants[exRoleName]) {
                 throw new AccessControlError(`Subject not found: "${grants[exRoleName]}"`);
             }
@@ -647,7 +640,7 @@ const utils = {
      *  @throws {Error} If a subject is extended by itself, a non-existent subject or
      *          a cross-inherited subject.
      */
-    extendRole(grants: any, subjects: string | string[], extenderRoles: string | string[]) {
+    extendRole(grants: any, subjects: string | string[], extenderRoles: string | string[], replace: boolean = false) {
         // subjects cannot be omitted or an empty array
         subjects = utils.toStringArray(subjects);
         if (subjects.length === 0) {
@@ -683,10 +676,10 @@ const utils = {
 
             utils.validName(subjectName); // throws if false
             let r = grants[subjectName];
-            if (Array.isArray(r.$extend)) {
-                r.$extend = utils.uniqConcat(r.$extend, arrExtRoles);
+            if (!replace) {
+                r._extend_ = utils.uniqConcat(r._extend_ ?? [], arrExtRoles);
             } else {
-                r.$extend = arrExtRoles;
+                r._extend_ = arrExtRoles;
             }
         });
     },

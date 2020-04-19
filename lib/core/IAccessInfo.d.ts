@@ -1,3 +1,4 @@
+import { Possession } from '../enums/Possession';
 /**
  *  An interface that defines an access information to be granted or denied.
  *  When you start a method chain with `AccessControl#grant` or `AccessControl#deny`
@@ -37,7 +38,7 @@ interface IAccessInfo {
      *  for possible values.
      *  @type {String}
      */
-    possession?: string;
+    possession?: Possession;
     /**
      *  Flag for denied access.
      *  @private

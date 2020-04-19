@@ -1,3 +1,5 @@
+import { Possession } from "../enums/Possession";
+
 /**
  *  An interface that defines an access information to be queried.
  *  When you start a method chain with `AccessControl#can` method, you're
@@ -30,7 +32,7 @@ interface IQueryInfo {
      *  for possible values.
      *  @type {String}
      */
-    possession?: string;
+    possession?: Possession;
 }
 
 export { IQueryInfo };

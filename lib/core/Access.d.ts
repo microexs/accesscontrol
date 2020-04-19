@@ -354,6 +354,14 @@ declare class Access {
      */
     delete(resource?: string | string[], attributes?: string | string[]): Access;
     /**
+     *  @param {String} action     [description]
+     *  @param {String|Array<String>} resource   [description]
+     *  @param {String|Array<String>} attributes [description]
+     *  @returns {Access}
+     *           Self instance of `Access`.
+     */
+    do(action: string, attributes?: string | string[]): Access;
+    /**
      *  @private
      *  @param {String} action     [description]
      *  @param {String} possession [description]
