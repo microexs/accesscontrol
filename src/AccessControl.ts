@@ -109,6 +109,7 @@ class AccessControl {
      *  @private
      */
     private _isLocked: boolean = false;
+    store: (grants: any) => void;
 
     /**
      *  Initializes a new instance of `AccessControl` with the given grants.
@@ -117,10 +118,11 @@ class AccessControl {
      *  @param {Object|Array} [grants] - A list containing the access grant
      *      definitions. See the structure of this object in the examples.
      */
-    constructor(grants?: any) {
+    constructor(grants?: any, store?: (grants: any) => void) {
         // explicit undefined is not allowed
         if (arguments.length === 0) grants = {};
         this.setGrants(grants);
+        this.store = store ?? (() => { });
     }
 
     // -------------------------------
@@ -205,6 +207,7 @@ class AccessControl {
     setGrants(grantsObject: any): AccessControl {
         if (this.isLocked) throw new AccessControlError(ERR_LOCK);
         this._grants = utils.getInspectedGrants(grantsObject);
+        this.store(this._grants);
         return this;
     }
 
@@ -219,6 +222,7 @@ class AccessControl {
     reset(): AccessControl {
         if (this.isLocked) throw new AccessControlError(ERR_LOCK);
         this._grants = {};
+        this.store(this._grants);
         return this;
     }
 
@@ -276,6 +280,7 @@ class AccessControl {
     extendRole(subjects: string | string[], extenderRoles: string | string[]): AccessControl {
         if (this.isLocked) throw new AccessControlError(ERR_LOCK);
         utils.extendRole(this._grants, subjects, extenderRoles);
+        this.store(this._grants);
         return this;
     }
 
@@ -309,6 +314,7 @@ class AccessControl {
                 subjectItem.$extend = utils.subtractArray(subjectItem.$extend, subjectsToRemove);
             }
         });
+        this.store(this._grants);
         return this;
     }
 
@@ -334,6 +340,7 @@ class AccessControl {
         // _removePermission has a third argument `actionPossession`. if
         // omitted (like below), removes the parent resource object.
         this._removePermission(resources, subjects);
+        this.store(this._grants);
         return this;
     }
 
@@ -559,7 +566,9 @@ class AccessControl {
             throw new AccessControlError('Invalid subject(s): undefined');
         }
         // other explicit invalid values will be checked in constructor.
-        return new Access(this, subject, false);
+        let access = new Access(this, subject, false);
+        this.store(this._grants);
+        return access;
     }
 
     /**
@@ -629,7 +638,9 @@ class AccessControl {
             throw new AccessControlError('Invalid subject(s): undefined');
         }
         // other explicit invalid values will be checked in constructor.
-        return new Access(this, subject, true);
+        let access = new Access(this, subject, true);
+        this.store(this._grants);
+        return access;
     }
 
     /**
@@ -678,6 +689,7 @@ class AccessControl {
                 }
             }
         });
+        this.store(this._grants);
     }
 
     // -------------------------------

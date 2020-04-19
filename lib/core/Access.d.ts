@@ -51,7 +51,7 @@ declare class Access {
      *  @type {Boolean}
      *  @readonly
      */
-    readonly denied: boolean;
+    get denied(): boolean;
     /**
      *  A chainer method that sets the subject(s) for this `Access` instance.
      *  @param {String|Array<String>} value
